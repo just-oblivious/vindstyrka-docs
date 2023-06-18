@@ -38,9 +38,9 @@ struct RawMysteryValues {
 };
 
 // Initial mock values
-uint16_t pm2p5 = 0;               // pm2.5 * 10
-uint16_t rawHumidity = 4000;      // rh% * 100
-uint16_t rawTemperature = 5000;   // temp. c * 500
+uint16_t pm2p5 = 0;               // 0 pm2.5 * 10
+uint16_t rawHumidity = 4000;      // 40 % * 100
+uint16_t rawTemperature = 5000;   // 25 c * 200
 uint16_t rawVOC = 30000;          // Raw VOC Reading
 uint16_t rawMysteryWord = 0xFB0C; // Mystery word
 
@@ -120,7 +120,7 @@ void respondRawMysteryValues(RawMysteryValues mock) {
 
 // Print the response payload
 void printTXBuffer() {
-  Serial.print("RX: | ");
+  Serial.print("TX: | ");
   for (uint8_t i = 0; i < TXLength; i++) {
     char buffer[4];
     sprintf(buffer, "%.2X ", TXBuffer[i]);
