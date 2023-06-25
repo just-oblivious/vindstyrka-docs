@@ -9,6 +9,8 @@ Implementations for ESPHome and Arduino are widely available, however these libr
 
 This discrepancy can be explained by the way IKEA processes the data, instead of using the preprocessed data from the sensor IKEA opted to use the raw sensor output (including undocumented mystery data!) to compute the values for temperature, humidity and tVOC trend.
 
+The goal of this exercise is to come up with a correction curve that can be used to accurately post-process the SEN54 data.
+
 ## Sniffing
 
 VINDSTYRKA (`V`) sends the following commands to the SEN54 (`S`):
@@ -44,7 +46,6 @@ V -> S: 0x03 0xF5         CMD: Read raw mystery measurement
 V <- S: MSB  LSB  CRC     Raw humidity * 100 (uint16)       [3]
         MSB  LSB  CRC     Raw temperature * 200 (uint16)    [4]
         ???  ???  CRC     Mystery word                      [5]
-        ???  ???  CRC     Unread mystery word (always 0xFFFF)
 ```
 
 ### Footnotes:
@@ -57,7 +58,7 @@ V <- S: MSB  LSB  CRC     Raw humidity * 100 (uint16)       [3]
 
 ## Emulating the sensor
 
-![VINDSTRYRKA Animation](images/vindstyrka-simulation.gif)
+![VINDSTYRKA Animation](images/vindstyrka-simulation.gif)
 
 To aide in this research I wrote an [Arduino implementation](sen54mock/sen54mock.ino) of the SEN54 that allows VINDSTYRKA to be fed arbitrary values over I2C.
 
@@ -81,4 +82,32 @@ After a while the VOC Index returns to 100 (the new baseline) and the arrow poin
 
 Within a few minutes VINDSTYRKA learns the new baseline and returns to reporting a VOC Index of 100.
 
-*More to come.*
+## Data logging
+
+![VINDSTYRKA Logger Setup](images/logger-setup.jpg)
+
+To correlate the SEN54 output with the processed output of VINDSTYRKA I wrote an [Arduino sketch](sen54logger/sen54logger.ino) that echos the SEN54 data over serial.
+
+An anti-collision mechanism was implemented to allow both VINDSTYRKA and the logger to co-exist on the I2C bus without interfering with each other. The logger also ensures that it does not prematurely clear the "data ready" flag on the sensor, as that could influence the readings received by VINDSTYRKA.
+
+Collision detection requires the SCL line to be duplicated to a second input pin on the Arduino, this allows the logger to time its transmissions within the idle time of VINDSTYRKA.
+
+A CSV-formatted line containing the measured values, raw values, and mystery values is printed out to the serial port with each successful acquisition.
+
+### Logging VINDSTYRKA values
+
+Processed readings from VINDSTYRKA can be acquired by interrogating the Zigbee clusters.
+
+VINDSTYRKA exposes its values in the following Zigbee clusters:
+```
+0x0405 # Humidity
+0x0402 # Temperature
+0x042a # PM2.5
+0xfc7e # VOC index
+```
+
+The values reported over Zigbee are identical to what is displayed on VINDSTYRKA (except for the VOC Index, which is displayed as a trend arrow). All values are reported in whole numbers with no decimal places.
+
+To bring it all together I created a [Python script](vindstyrka_logger/log_values.py) that monitors the serial port for readings from the Arduino logger, after receiving a reading it then fetches the VINDSTYRKA values from Home Assistant through the ZHA Websocket API. Finally all these data points are written to a CSV file.
+
+*Research continues once enough data points have been acquired.*

@@ -1,0 +1,14 @@
+# Home Assistant Websocket URI (wss:// for HTTPS)
+uri: ws://10.0.0.10:8123/api/websocket
+
+# Long-lived access token (https://developers.home-assistant.io/docs/auth_api/#long-lived-access-token)
+token: INSERT_TOKEN_HERE
+
+# Zigbee IEEE of VINDSTYRKA to read values from through ZHA
+vindstyrka: 38:5c:fb:ff:fe:c7:1c:a1
+
+# Serial port to read Sen54 data from
+serial: /dev/ttyACM0
+
+# Output file (CSV)
+output_file: "values.csv"

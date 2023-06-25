@@ -33,8 +33,7 @@ struct RawValues {
 struct RawMysteryValues {
   uint16_t humidity;     // Scale: x100     # Processed for temp display (identical to "raw" value)
   uint16_t temperature;  // Scale: x200     # Processed for humidity display (identical to "raw" value)
-  uint16_t mystery1;     // Mystery word 1  # Influences humidity and temperature readings in a mysterious way
-  uint16_t mystery2;     // Mystery word 2  # Not used
+  uint16_t mystery;      // Mystery word    # Influences humidity and temperature readings in a mysterious way
 };
 
 // Initial mock values
@@ -42,11 +41,11 @@ uint16_t pm2p5 = 0;               // 0 pm2.5 * 10
 uint16_t rawHumidity = 4000;      // 40 % * 100
 uint16_t rawTemperature = 5000;   // 25 c * 200
 uint16_t rawVOC = 30000;          // Raw VOC Reading
-uint16_t rawMysteryWord = 0xFB0C; // Mystery word
+uint16_t rawMysteryWord = 0xFC05; // Mystery word
 
 MeasuredValues MockMeasurements = {0, pm2p5, 0, 0, 0, 0, 0, 0xFFFF};
 RawValues MockRawMeasurements = {rawHumidity, rawTemperature, rawVOC, 0xFFFF};
-RawMysteryValues MockRawMysteryMeasurements = {rawHumidity, rawTemperature, rawMysteryWord, 0xFFFF};
+RawMysteryValues MockRawMysteryMeasurements = {rawHumidity, rawTemperature, rawMysteryWord};
 
 // Some flags and buffers
 bool dataReadyFlag = true;
@@ -113,8 +112,7 @@ void respondRawValues(RawValues mock) {
 void respondRawMysteryValues(RawMysteryValues mock) {
   TXLength += addTXWord(mock.humidity, TXBuffer, TXLength);
   TXLength += addTXWord(mock.temperature, TXBuffer, TXLength);
-  TXLength += addTXWord(mock.mystery1, TXBuffer, TXLength);
-  TXLength += addTXWord(mock.mystery2, TXBuffer, TXLength);
+  TXLength += addTXWord(mock.mystery, TXBuffer, TXLength);
   TXReady = true;
 }
 
