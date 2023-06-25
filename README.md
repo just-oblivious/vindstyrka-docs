@@ -9,7 +9,7 @@ Implementations for ESPHome and Arduino are widely available, however these libr
 
 This discrepancy can be explained by the way IKEA processes the data, instead of using the preprocessed data from the sensor IKEA opted to use the raw sensor output (including undocumented mystery data!) to compute the values for temperature, humidity and tVOC trend.
 
-The goal of this exercise is to come up with a correction curve that can be used to accurately post-process the SEN54 data.
+The goal of this exercise is to come up with a correction curve that can be used to accurately post-process the SEN54 humidity and temperature data.
 
 ## Sniffing
 
@@ -92,7 +92,7 @@ An anti-collision mechanism was implemented to allow both VINDSTYRKA and the log
 
 Collision detection requires the SCL line to be duplicated to a second input pin on the Arduino, this allows the logger to time its transmissions within the idle time of VINDSTYRKA.
 
-A CSV-formatted line containing the measured values, raw values, and mystery values is printed out to the serial port with each successful acquisition.
+After each successful acquisition a CSV-formatted line containing the measured values, raw values, and mystery values is printed out to the serial port.
 
 ### Logging VINDSTYRKA values
 
@@ -109,5 +109,14 @@ VINDSTYRKA exposes its values in the following Zigbee clusters:
 The values reported over Zigbee are identical to what is displayed on VINDSTYRKA (except for the VOC Index, which is displayed as a trend arrow). All values are reported in whole numbers with no decimal places.
 
 To bring it all together I created a [Python script](vindstyrka_logger/log_values.py) that monitors the serial port for readings from the Arduino logger, after receiving a reading it then fetches the VINDSTYRKA values from Home Assistant through the ZHA Websocket API. Finally all these data points are written to a CSV file.
+
+The recorded samples look like this:
+```
+2023-06-25T17:47:09.348163;9979784,9285;PRO,8,52,54,54,54,4362,5250,650,32767,RAW,4,3274,6303,31907,65535,MYS,3,3274,6303,64476,ZHA,4,6.0,67.0,5200,2400
+2023-06-25T17:47:10.368067;9980802,9286;PRO,8,51,54,54,54,4362,5250,650,32767,RAW,4,3270,6304,31901,65535,MYS,3,3270,6304,64473,ZHA,4,5.0,67.0,5200,2400
+2023-06-25T17:47:11.388047;9981818,9287;PRO,8,51,54,54,54,4362,5250,650,32767,RAW,4,3274,6304,31920,65535,MYS,3,3274,6304,64475,ZHA,4,5.0,67.0,5200,2400
+2023-06-25T17:47:12.407920;9982836,9288;PRO,8,51,53,53,53,4362,5250,650,32767,RAW,4,3271,6301,31927,65535,MYS,3,3271,6301,64475,ZHA,4,5.0,67.0,5200,2400
+2023-06-25T17:47:13.429023;9983854,9289;PRO,8,50,52,52,52,4362,5250,650,32767,RAW,4,3272,6302,31926,65535,MYS,3,3272,6302,64476,ZHA,4,5.0,67.0,5200,2400
+```
 
 *Research continues once enough data points have been acquired.*
